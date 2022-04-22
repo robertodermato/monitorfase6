@@ -850,19 +850,25 @@ public class Sistema {
     public static Programas progs;
     public GerenciadorMemoria gm;
     public GerenciadorProcessos gp;
+    private Escalonador escalonador;
     public int[] registradores;
     public Word instructionRegister;
     public Interrupts interrupt;
+    private LinkedList<PCB> prontos;
+    private LinkedList<PCB> bloqueados;
 
     public Sistema(int tamMemoria, int tamPagina, int maxInt, int quantidadeRegistradores){   // a VM com tratamento de interrupções
         vm = new VM(tamMemoria, tamPagina, maxInt);
         monitor = new Monitor();
         progs = new Programas();
+        prontos = new LinkedList();
+        bloqueados = new LinkedList();
         gm = new GerenciadorMemoria(vm.m, tamPagina);
         gp = new GerenciadorProcessos(gm, vm.m);
         registradores = new int[quantidadeRegistradores];
         instructionRegister = new Word(Opcode.___,-1,-1,-1);
         interrupt = Interrupts.INT_NONE;
+        this.escalonador = new Escalonador(prontos, vm.cpu);
     }
 
     public void roda(Word[] programa){
@@ -968,11 +974,11 @@ public class Sistema {
 
         public void run() {
             while(true){
-                if(prontos.isEmpty()) continue;
+                if(prontos.isEmpty()==false) break; //Se esvaziou lista de prontos, termina.
                 PCB pcb = prontos.get(pointer);
                 this.runningProcess = pcb;
                 int old = pointer;
-                pointer = (pointer + 1) % prontos.size();
+                pointer = pointer + 1;
                 prontos.remove(old);
                 cpu.setContext(cpu.getPc(), pcb.getPaginasAlocadas(), cpu.getReg(), cpu.getIr(), cpu.getInterrupts());
             }
