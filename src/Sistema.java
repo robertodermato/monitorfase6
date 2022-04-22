@@ -64,6 +64,7 @@ public class Sistema {
         private int[] paginasAlocadas;
         private int[] tabelaDePaginas;
         private int tamPaginaMemoria;
+        int delta; // usado pelo escalonador
 
         // cria variável interrupção
         public Interrupts interrupts;
@@ -75,6 +76,7 @@ public class Sistema {
             reg = new int[10];        // aloca o espaço dos registradores
             this.maxInt = maxInt;          // números aceitos -100_000 até 100_000
             this.tamPaginaMemoria = tamPaginaMemoria;
+            delta = 0;
         }
 
         public void setContext(int _pc, int [] paginasAlocadas, int [] registradores, Word instructionRegister, Interrupts interrupt) {  // no futuro esta funcao vai ter que ser
@@ -175,6 +177,9 @@ public class Sistema {
                 //}
 
                 ir = m[traduzEndereco(pc)];    // busca posicao da memoria apontada por pc, guarda em ir
+
+                delta++;
+                System.out.println("Delta em " + delta);
 
                 //só para debug
                 //showState();
@@ -959,6 +964,12 @@ public class Sistema {
 
     }
 
+    // Fase 6 - Escalonador rodando no Sistema
+    public void runEscalonador() {
+        System.out.println("Iniciando Escalonador");
+        escalonador.run();
+    }
+
     public class Escalonador {
 
         private LinkedList<PCB> prontos;
@@ -1055,7 +1066,7 @@ public class Sistema {
         //s.cria(progs.fatorial);
         //s.cria(progs.fatorial);
         //s.cria(progs.fatorial);
-        //s.executa(5);
+        s.executa(2);
         //s.dump(2);
         //s.dumpM(2,5);
         //s.desaloca(2);
