@@ -54,9 +54,11 @@ public class App {
         //s.cria(Sistema.progs.fatorial);
         //s.cria(Sistema.progs.fatorial);
         //s.cria(Sistema.progs.fatorial);
-        s.executa(2);
+        //s.executa(2);
         //s.dump(2);
         //s.dumpM(2,5);
         //s.desaloca(2);
+
+        s.executaComEscalonador();
     }
 }

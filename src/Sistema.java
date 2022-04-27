@@ -69,18 +69,25 @@ public class Sistema {
         // usado pelo escalonador
         int delta;
         int deltaMax;
+        boolean escalonadorState;
 
         // cria variável interrupção
         public Interrupts interrupts;
 
         private Word[] m;   // CPU acessa MEMORIA, guarda referencia 'm' a ela. memoria nao muda. ee sempre a mesma.
 
-        public CPU(Word[] _m, int tamPaginaMemoria, int maxInt, int deltaMax) {     // ref a MEMORIA e interrupt handler passada na criacao da CPU
+        public CPU(Word[] _m, int tamPaginaMemoria, int maxInt, int deltaMax, int [] reg, Interrupts interrupts, Word ir) {     // ref a MEMORIA e interrupt handler passada na criacao da CPU
             m = _m;                // usa o atributo 'm' para acessar a memoria.
             reg = new int[10];        // aloca o espaço dos registradores
             this.maxInt = maxInt;          // números aceitos -100_000 até 100_000
             this.tamPaginaMemoria = tamPaginaMemoria;
+            this.reg = reg;
+            this.interrupts = interrupts;
+            this.ir = ir;
+
             delta = 0;
+            this.deltaMax = deltaMax;
+            escalonadorState = false;
         }
 
         public void setContext(int _pc, int [] paginasAlocadas, int [] registradores, Word instructionRegister, Interrupts interrupt) {  // no futuro esta funcao vai ter que ser
@@ -93,6 +100,10 @@ public class Sistema {
             this.interrupts = interrupt;
         }
 
+        public void setEscalonadorState(boolean state){
+            this.escalonadorState = state;
+        }
+
         public Interrupts getInterrupts(){
             return interrupts;
         }
@@ -102,7 +113,8 @@ public class Sistema {
         }
 
         public int getPc(){
-            return pc;
+            if (pc==0) return 0;
+            return traduzEndereco(pc);
         }
 
         public Word getIr(){
@@ -170,7 +182,6 @@ public class Sistema {
         }
 
         public void run() {        // execucao da CPU supoe que o contexto da CPU, vide acima, esta devidamente setado
-            //System.out.println("Início da execução pela CPU");
 
             boolean run = true;
             while (run) {            // ciclo de instrucoes. acaba cfe instrucao, veja cada caso.
@@ -414,7 +425,7 @@ public class Sistema {
                 }
 
                 // Aciona o Escalonador
-                if (delta==deltaMax){
+                if (delta==deltaMax && escalonadorState==true){
                     delta=0;
                     interrupts = Interrupts.INT_SCHEDULER;
                 }
@@ -442,7 +453,7 @@ public class Sistema {
         public CPU cpu;
         private int tamanhoPaginaMemoria;
 
-        public VM(int tamMem, int tamanhoPaginaMemoria, int maxInt, int deltaMax) {
+        public VM(int tamMem, int tamanhoPaginaMemoria, int maxInt, int deltaMax, int [] registradors, Interrupts interrupt, Word instructionRegister) {
             // memória
             this.tamMem = tamMem;
             this.tamanhoPaginaMemoria = tamanhoPaginaMemoria;
@@ -453,7 +464,7 @@ public class Sistema {
             ;
 
             // cpu
-            cpu = new CPU(m, tamanhoPaginaMemoria, maxInt, deltaMax);   // cpu acessa memória
+            cpu = new CPU(m, tamanhoPaginaMemoria, maxInt, deltaMax, registradores, interrupt, instructionRegister);   // cpu acessa memória
         }
 
         public int getTamMem() {
@@ -523,6 +534,7 @@ public class Sistema {
             switch (interrupts) {
                 case INT_SCHEDULER:
                     System.out.println("Escalonador acionado");
+                    gp.runEscalonador(programCounter, registers, instructionRegister, interrupts, gp.running.getPaginasAlocadas());
                     return true;
 
                 case INT_INVALID_ADDRESS:
@@ -724,16 +736,22 @@ public class Sistema {
         private LinkedList<PCB> prontos;
         private int process_id;
         public PCB running;
+        public int posicaoEscalonador;
 
         public GerenciadorProcessos(GerenciadorMemoria gm, Word[] memory) {
             process_id=0;
             this.gm = gm;
             this.memory = memory;
             this.prontos = new LinkedList<>();
+            this.posicaoEscalonador = 0;
         }
 
         public LinkedList<PCB> getProntos() {
             return prontos;
+        }
+
+        public void setProntos(LinkedList<PCB> prontos){
+            this.prontos = prontos;
         }
 
         public PCB getRunning(){
@@ -781,7 +799,7 @@ public class Sistema {
                 return -1;
             }
 
-            PCB processo = new PCB(process_id, paginasAlocadas);
+            PCB processo = new PCB(process_id, paginasAlocadas, vm.cpu.getPc(), vm.cpu.getReg(), vm.cpu.getIr(), vm.cpu.getInterrupts());
             prontos.add(processo);
 
             process_id++;
@@ -800,6 +818,28 @@ public class Sistema {
             gm.desaloca(processo);
             prontos.remove(processo);
         }
+
+        public void runEscalonador(int programCounter, int [] registradores, Word instructionRegister, Interrupts interrupt, int[] paginasAlocadas){
+            running = prontos.get(posicaoEscalonador);
+
+            // seta as variáveis do processo atual com estado atual da CPU
+            running.setContext(programCounter, registradores, instructionRegister, interrupt);
+
+            // para poder ciclar a posição do escalonador
+            posicaoEscalonador =  (posicaoEscalonador + 1) % prontos.size();
+
+            running = prontos.get(posicaoEscalonador);
+
+            // pega o contexto do processo que ira rodar agora
+            int programCounterDoRunning = running.getProgramCounter();
+            int [] paginasAlocadasDoRunning = running.getPaginasAlocadas();
+            int [] registradoresdoRunning = running.getRegistradores();
+            Word instructionRegisterDoRunning = running.getInstructionRegister();
+            Interrupts interruptsDoRunning = running.getInterrupt();
+
+            vm.cpu.setContext(programCounterDoRunning, paginasAlocadasDoRunning, registradoresdoRunning, instructionRegisterDoRunning, interruptsDoRunning);
+
+        }
     }
 
 
@@ -812,9 +852,14 @@ public class Sistema {
         public Word instructionRegister;
         public Interrupts interrupt;
 
-        public PCB(int id, int[]paginasAlocadas) {
+        public PCB(int id, int[]paginasAlocadas, int pc, int [] reg, Word ir, Interrupts interrupt) {
             this.id= id;
             this.paginasAlocadas = paginasAlocadas;
+            this.programCounter = pc;
+            this.registradores = reg;
+            this.instructionRegister = ir;
+            this.interrupt = interrupt;
+
         }
 
         public int[] getPaginasAlocadas(){
@@ -871,16 +916,18 @@ public class Sistema {
     private LinkedList<PCB> bloqueados;
 
     public Sistema(int tamMemoria, int tamPagina, int maxInt, int quantidadeRegistradores, int deltaMax){   // a VM com tratamento de interrupções
-        vm = new VM(tamMemoria, tamPagina, maxInt, deltaMax);
+        registradores = new int[quantidadeRegistradores];
+        interrupt = Interrupts.INT_NONE;
+        instructionRegister = new Word(Opcode.___,-1,-1,-1);
+
+        vm = new VM(tamMemoria, tamPagina, maxInt, deltaMax, registradores, interrupt, instructionRegister);
         monitor = new Monitor();
         progs = new Programas();
         prontos = new LinkedList();
         bloqueados = new LinkedList();
         gm = new GerenciadorMemoria(vm.m, tamPagina);
         gp = new GerenciadorProcessos(gm, vm.m);
-        registradores = new int[quantidadeRegistradores];
-        instructionRegister = new Word(Opcode.___,-1,-1,-1);
-        interrupt = Interrupts.INT_NONE;
+
         this.escalonador = new Escalonador(prontos, vm.cpu);
     }
 
@@ -938,9 +985,32 @@ public class Sistema {
         for (int i=0; i<paginasAlocadas.length; i++){
             System.out.println(paginasAlocadas[i] + " ");
         }
-        vm.cpu.setContext(0, paginasAlocadas, registradores, instructionRegister, interrupt);          // monitor seta contexto - pc aponta para inicio do programa
+
+        PCB running = gp.getProcesso(processId);
+
+        // pega o contexto do processo que está rodando
+        int programCounterDoRunning = running.getProgramCounter();
+        int [] paginasAlocadasDoRunning = running.getPaginasAlocadas();
+        int [] registradoresdoRunning = running.getRegistradores();
+        Word instructionRegisterDoRunning = running.getInstructionRegister();
+        Interrupts interruptsDoRunning = running.getInterrupt();
+
+        vm.cpu.setContext(programCounterDoRunning, paginasAlocadasDoRunning, registradoresdoRunning, instructionRegisterDoRunning, interruptsDoRunning);
+        //vm.cpu.setContext(0, paginasAlocadas, registradores, instructionRegister, interrupt);          // monitor seta contexto - pc aponta para inicio do programa
         vm.cpu.run();                  //                         e cpu executa
         System.out.println("---------------------------------- programa executado ");
+        gm.dumpMemoriaUsada(vm.m);
+    }
+
+    public void executaComEscalonador() {
+        System.out.println("Iniciando execução dos processos prontos com escalonador");
+        vm.cpu.setEscalonadorState(true);
+        prontos = gp.getProntos();
+        PCB running = prontos.getFirst();
+        gp.setRunning(running);
+
+        vm.cpu.run();
+        System.out.println("---------------------------------- Escalonador executado ");
         gm.dumpMemoriaUsada(vm.m);
     }
 
