@@ -172,6 +172,9 @@ public class Sistema {
         }
 
         public int traduzEndereco (int endereco){
+            System.out.println(endereco);
+            System.out.println("paginas alocadas" + paginasAlocadas.length);
+
             try {
                 return (paginasAlocadas[(endereco / tamPaginaMemoria)] * tamPaginaMemoria) + (endereco % tamPaginaMemoria);
 
@@ -190,6 +193,8 @@ public class Sistema {
                 //if (isAddressValid(traduzEndereco(pc))) {
                 //    ir = m[traduzEndereco(pc)];
                 //}
+
+                //System.out.println("rodando a cpu");
 
                 ir = m[traduzEndereco(pc)];    // busca posicao da memoria apontada por pc, guarda em ir
 
@@ -1008,6 +1013,15 @@ public class Sistema {
         prontos = gp.getProntos();
         PCB running = prontos.getFirst();
         gp.setRunning(running);
+
+        // pega o contexto do processo que está rodando
+        int programCounterDoRunning = running.getProgramCounter();
+        int [] paginasAlocadasDoRunning = running.getPaginasAlocadas();
+        int [] registradoresdoRunning = running.getRegistradores();
+        Word instructionRegisterDoRunning = running.getInstructionRegister();
+        Interrupts interruptsDoRunning = running.getInterrupt();
+
+        vm.cpu.setContext(programCounterDoRunning, paginasAlocadasDoRunning, registradoresdoRunning, instructionRegisterDoRunning, interruptsDoRunning);
 
         vm.cpu.run();
         System.out.println("---------------------------------- Escalonador executado ");
