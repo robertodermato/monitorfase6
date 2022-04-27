@@ -834,6 +834,7 @@ public class Sistema {
             posicaoEscalonador =  (posicaoEscalonador + 1) % prontos.size();
 
             running = prontos.get(posicaoEscalonador);
+            System.out.println("running id " + running.getId());
 
             // pega o contexto do processo que ira rodar agora
             int programCounterDoRunning = running.getProgramCounter();
