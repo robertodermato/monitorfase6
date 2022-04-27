@@ -65,14 +65,17 @@ public class Sistema {
         private int[] paginasAlocadas;
         private int[] tabelaDePaginas;
         private int tamPaginaMemoria;
-        int delta; // usado pelo escalonador
+
+        // usado pelo escalonador
+        int delta;
+        int deltaMax;
 
         // cria variável interrupção
         public Interrupts interrupts;
 
         private Word[] m;   // CPU acessa MEMORIA, guarda referencia 'm' a ela. memoria nao muda. ee sempre a mesma.
 
-        public CPU(Word[] _m, int tamPaginaMemoria, int maxInt) {     // ref a MEMORIA e interrupt handler passada na criacao da CPU
+        public CPU(Word[] _m, int tamPaginaMemoria, int maxInt, int deltaMax) {     // ref a MEMORIA e interrupt handler passada na criacao da CPU
             m = _m;                // usa o atributo 'm' para acessar a memoria.
             reg = new int[10];        // aloca o espaço dos registradores
             this.maxInt = maxInt;          // números aceitos -100_000 até 100_000
@@ -411,7 +414,7 @@ public class Sistema {
                 }
 
                 // Aciona o Escalonador
-                if (delta==5){
+                if (delta==deltaMax){
                     delta=0;
                     interrupts = Interrupts.INT_SCHEDULER;
                 }
@@ -439,7 +442,7 @@ public class Sistema {
         public CPU cpu;
         private int tamanhoPaginaMemoria;
 
-        public VM(int tamMem, int tamanhoPaginaMemoria, int maxInt) {
+        public VM(int tamMem, int tamanhoPaginaMemoria, int maxInt, int deltaMax) {
             // memória
             this.tamMem = tamMem;
             this.tamanhoPaginaMemoria = tamanhoPaginaMemoria;
@@ -450,7 +453,7 @@ public class Sistema {
             ;
 
             // cpu
-            cpu = new CPU(m, tamanhoPaginaMemoria, maxInt);   // cpu acessa memória
+            cpu = new CPU(m, tamanhoPaginaMemoria, maxInt, deltaMax);   // cpu acessa memória
         }
 
         public int getTamMem() {
@@ -520,6 +523,7 @@ public class Sistema {
             switch (interrupts) {
                 case INT_SCHEDULER:
                     System.out.println("Escalonador acionado");
+                    return true;
 
                 case INT_INVALID_ADDRESS:
                     System.out.println("Endereço inválido, na linha: " + programCounter);
@@ -778,8 +782,9 @@ public class Sistema {
             }
 
             PCB processo = new PCB(process_id, paginasAlocadas);
-            process_id++;
             prontos.add(processo);
+
+            process_id++;
 
             //debug
             System.out.println("Páginas alocadas");
@@ -820,36 +825,27 @@ public class Sistema {
             return this.id;
         }
 
-        public void setProgramCounter(int pc){
-            programCounter = pc;
-        }
-
         public int getProgramCounter(){
             return programCounter;
-        }
-
-        public void setRegistradores(int [] registradores){
-            this.registradores = registradores;
         }
 
         public int[] getRegistradores(){
             return registradores;
         }
 
-        public void setInstructionRegister(Word ir){
-            instructionRegister = ir;
-        }
-
         public Word getInstructionRegister(){
             return instructionRegister;
         }
 
-        public void setInterrupt(Interrupts interrupt){
-            this.interrupt = interrupt;
-        }
-
         public Interrupts getInterrupt(){
             return interrupt;
+        }
+
+        public void setContext (int programCounter, int[] registradores, Word instructionRegister, Interrupts interrupt){
+            this.programCounter = programCounter;
+            this.registradores =registradores;
+            this.instructionRegister = instructionRegister;
+            this.interrupt = interrupt;
         }
 
     }
@@ -874,8 +870,8 @@ public class Sistema {
     private LinkedList<PCB> prontos;
     private LinkedList<PCB> bloqueados;
 
-    public Sistema(int tamMemoria, int tamPagina, int maxInt, int quantidadeRegistradores){   // a VM com tratamento de interrupções
-        vm = new VM(tamMemoria, tamPagina, maxInt);
+    public Sistema(int tamMemoria, int tamPagina, int maxInt, int quantidadeRegistradores, int deltaMax){   // a VM com tratamento de interrupções
+        vm = new VM(tamMemoria, tamPagina, maxInt, deltaMax);
         monitor = new Monitor();
         progs = new Programas();
         prontos = new LinkedList();

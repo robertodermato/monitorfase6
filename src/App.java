@@ -6,8 +6,9 @@ public class App {
         int tamanhoDaPaginadeMemoria = 16;
         int maxInt = 100_000;
         int quantidadeRegistradores = 10;
+        int deltaMax = 5; // usado pelo escalonador para interromper a CPU a cada x ciclos
 
-        Sistema s = new Sistema(tamanhoDamemoria, tamanhoDaPaginadeMemoria, maxInt, quantidadeRegistradores);
+        Sistema s = new Sistema(tamanhoDamemoria, tamanhoDaPaginadeMemoria, maxInt, quantidadeRegistradores, deltaMax);
 
         // Desenvolvidos pelo professor
         //s.roda(Sistema.progs.fibonacci10);
@@ -53,7 +54,7 @@ public class App {
         //s.cria(Sistema.progs.fatorial);
         //s.cria(Sistema.progs.fatorial);
         //s.cria(Sistema.progs.fatorial);
-        //s.executa(5);
+        s.executa(2);
         //s.dump(2);
         //s.dumpM(2,5);
         //s.desaloca(2);
