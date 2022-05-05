@@ -65,11 +65,11 @@ public class App {
         //s.cria(Sistema.progs.bubbleSort);
         //s.cria(Sistema.progs.bubbleSort);
         //s.cria(Sistema.progs.bubbleSort);
-        //s.cria(Sistema.progs.fatorial);
         s.cria(Sistema.progs.fatorial);
         s.cria(Sistema.progs.fatorial);
         //s.cria(Sistema.progs.fatorial);
-        //s.cria(Sistema.progs.bubbleSort);
+        //s.cria(Sistema.progs.fatorial);
+        s.cria(Sistema.progs.bubbleSort);
 
         s.executaComEscalonador();
     }

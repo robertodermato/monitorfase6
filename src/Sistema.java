@@ -575,7 +575,8 @@ public class Sistema {
 
                 case INT_STOP:
                     System.out.println("Ocorreu STOP no código, logo vamos remover o running");
-                    gp.removeFromProntos(gp.running);
+                    //gp.removeFromProntos(gp.running);  // se usar essa linha o programa permanece na memória e dá rpa ver o resultado
+                    gp.finalizaProcesso(gp.running); // assim o programa sai da memória, mas o dump é limpo
 
                     // vê se ainda tem algum processo na lista e deixa esse como sendo o running
                     if (gp.prontos.size()>0){
@@ -766,6 +767,12 @@ public class Sistema {
 
         public void desaloca(PCB processo){
             int[] paginas = processo.getPaginasAlocadas();
+
+            System.out.println("------ Estado da memória do programa desalocado---------");
+            for(int i = 0; i < paginas.length; i ++) {
+                dumpPagina(mem, paginas[i]);
+            }
+
             for(int i = 0; i < paginas.length; i ++) {
                 tabelaPaginas[paginas[i]] = true; // libera o frame
 
