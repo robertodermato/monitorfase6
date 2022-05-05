@@ -53,7 +53,8 @@ public class Sistema {
         INT_INVALID_ADDRESS,        // Nossa memória tem 1024 posições
         INT_OVERFLOW,               // Nossa memória só trabalha com inteiros, ou seja de -2,147,483,648 até 2,147,483,647
         INT_SYSTEM_CALL,            // Ativa chamada de I/O pelo comando TRAP
-        INT_SCHEDULER;              // Aciona o Escalonador
+        INT_SCHEDULER,              // Aciona o Escalonador
+        INT_STOP;                   // Usada com o escalonador
     }
 
     public class CPU {
@@ -448,7 +449,11 @@ public class Sistema {
 
                 // VERIFICA INTERRUPÇÃO !!! - TERCEIRA FASE DO CICLO DE INSTRUÇÕES
                 if (ir.opc == Opcode.STOP) {
-                    break; // break sai do loop da cpu
+                    if (escalonadorState==true){
+                        interrupts = Interrupts.INT_STOP;
+                    }
+                    else
+                        break; // break sai do loop da cpu
                 }
 
                 // Aciona o Escalonador
@@ -563,6 +568,21 @@ public class Sistema {
                     System.out.println("Escalonador acionado");
                     gp.runEscalonador(programCounter, registers, instructionRegister, interrupts, gp.running.getPaginasAlocadas());
                     return true;
+
+                case INT_STOP:
+                    System.out.println("Ocorreu STOP no código, logo vamos remover o running");
+                    gp.removeFromProntos(gp.running);
+
+                    // vê se ainda tem algum processo na lista e deixa esse como sendo o running
+                    if (gp.prontos.size()>0){
+                        if (gp.posicaoEscalonador>0) gp.posicaoEscalonador = gp.posicaoEscalonador - 1;
+                        gp.running = gp.prontos.get(gp.posicaoEscalonador);
+                        gp.setCPUforRunningProcess();
+                        return true;
+                    }
+                    else{
+                        return false;
+                    }
 
                 case INT_INVALID_ADDRESS:
                     System.out.println("Endereço inválido, na linha: " + programCounter);
@@ -844,6 +864,22 @@ public class Sistema {
         public void finalizaProcesso(PCB processo){
             gm.desaloca(processo);
             prontos.remove(processo);
+            //System.out.println("Removido o processo " + processo.getId());
+        }
+
+        public void removeFromProntos(PCB processo){
+            prontos.remove(processo);
+        }
+
+        public void setCPUforRunningProcess(){
+            // pega o contexto do processo que ira rodar agora
+            int programCounterDoRunning = running.getProgramCounter();
+            int [] paginasAlocadasDoRunning = running.getPaginasAlocadas();
+            int [] registradoresdoRunning = running.getRegistradores();
+            Word instructionRegisterDoRunning = running.getInstructionRegister();
+            Interrupts interruptsDoRunning = running.getInterrupt();
+
+            vm.cpu.setContext(programCounterDoRunning, paginasAlocadasDoRunning, registradoresdoRunning, instructionRegisterDoRunning, interruptsDoRunning);
         }
 
         public void runEscalonador(int programCounter, int [] registradores, Word instructionRegister, Interrupts interrupt, int[] paginasAlocadas){

@@ -48,12 +48,14 @@ public class App {
         //s.roda(Sistema.progs.bubbleSort);
 
         // Fase 5 - Gernciador de Processos
+        s.cria(Sistema.progs.bubbleSort);
         //s.cria(Sistema.progs.bubbleSort);
         //s.cria(Sistema.progs.bubbleSort);
-        //s.cria(Sistema.progs.bubbleSort);
-        s.cria(Sistema.progs.fatorial);
+        //s.cria(Sistema.progs.fatorial);
         s.cria(Sistema.progs.fatorial);
         //s.cria(Sistema.progs.fatorial);
+        s.cria(Sistema.progs.fatorial);
+        s.cria(Sistema.progs.bubbleSort);
         //s.executa(2);
         //s.dump(2);
         //s.dumpM(2,5);
