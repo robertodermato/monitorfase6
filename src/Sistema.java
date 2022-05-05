@@ -100,6 +100,8 @@ public class Sistema {
             ir = instructionRegister;
             this.interrupts = interrupt;
 
+            // debug
+            /*
             System.out.println("Novo contexto de CPU setado pelo setContext da CPU");
             System.out.println("pc em: " + pc);
             System.out.print("Páginas alocadas: ");
@@ -115,6 +117,7 @@ public class Sistema {
             }
             ;
             System.out.println("");
+             */
 
         }
 
@@ -131,8 +134,6 @@ public class Sistema {
         }
 
         public int getPc(){
-            //if (pc==0) return 0;
-            //return traduzEndereco(pc);
             return pc;
         }
 
@@ -191,18 +192,21 @@ public class Sistema {
         }
 
         public int traduzEndereco (int endereco){
+            // debug
+            /*
             System.out.println("Traduzindo endereço: " + endereco);
             System.out.print("Páginas alocadas usadas pelo tradutor de endereço: ");
             for (int i=0; i<paginasAlocadas.length; i++){
                 System.out.println(paginasAlocadas[i] + " ");
             }
             System.out.println("");
+             */
 
             try {
                 return (paginasAlocadas[(endereco / tamPaginaMemoria)] * tamPaginaMemoria) + (endereco % tamPaginaMemoria);
 
             } catch(ArrayIndexOutOfBoundsException e) {
-                System.out.println("Retorno -1 do traduz");
+                //System.out.println("Retorno -1 do traduz");
                 return -1;
             }
         }
@@ -222,10 +226,10 @@ public class Sistema {
                 ir = m[traduzEndereco(pc)];    // busca posicao da memoria apontada por pc, guarda em ir
 
                 delta++;
-                System.out.println("Delta em " + delta);
+                //System.out.println("Delta em " + delta);
 
                 //só para debug
-                showState();
+                //showState();
 
                 // EXECUTA INSTRUCAO NO ir
                 switch (ir.opc) { // para cada opcode, sua execução
@@ -852,10 +856,12 @@ public class Sistema {
             process_id++;
 
             //debug
+            /*
             System.out.println("Páginas alocadas durante a criação do processo pelo GP: ");
             for (int i=0; i<paginasAlocadas.length; i++){
                 System.out.println(paginasAlocadas[i] + " ");
             }
+             */
 
             return process_id-1;
         }
@@ -885,7 +891,8 @@ public class Sistema {
         public void runEscalonador(int programCounter, int [] registradores, Word instructionRegister, Interrupts interrupt, int[] paginasAlocadas){
             running = prontos.get(posicaoEscalonador);
 
-            // seta as variáveis do processo atual com estado atual da CPU
+            // debug
+            /*
             System.out.println("Processo em execução e que será parado é id: " + running.getId() + " e seu Pc está em: " + running.getProgramCounter());
             System.out.println("Sua posição no escalonador é " + posicaoEscalonador);
 
@@ -895,13 +902,18 @@ public class Sistema {
                 System.out.println(paginasAlocadasDoProcessoAtual[i] + " ");
             }
             System.out.println(" ");
+             */
 
+            // seta as variáveis do processo atual com estado atual da CPU
             running.setContext(programCounter, registradores, instructionRegister, interrupt);
 
             // para poder ciclar a posição do escalonador
             posicaoEscalonador =  (posicaoEscalonador + 1) % prontos.size();
 
             running = prontos.get(posicaoEscalonador);
+
+            // debug
+            /*
             System.out.println("Processo para iniciar execução é id: " + running.getId() + " e seu Pc está em: " + running.getProgramCounter());
             System.out.println("Sua posição no escalonador é " + posicaoEscalonador);
 
@@ -911,16 +923,9 @@ public class Sistema {
                 System.out.println(paginasAlocadasDoProcessoAtual[i] + " ");
             }
             System.out.println(" ");
+             */
 
-            // pega o contexto do processo que ira rodar agora
-            int programCounterDoRunning = running.getProgramCounter();
-            int [] paginasAlocadasDoRunning = running.getPaginasAlocadas();
-            int [] registradoresdoRunning = running.getRegistradores();
-            Word instructionRegisterDoRunning = running.getInstructionRegister();
-            Interrupts interruptsDoRunning = running.getInterrupt();
-
-            vm.cpu.setContext(programCounterDoRunning, paginasAlocadasDoRunning, registradoresdoRunning, instructionRegisterDoRunning, interruptsDoRunning);
-
+            setCPUforRunningProcess();
         }
     }
 
