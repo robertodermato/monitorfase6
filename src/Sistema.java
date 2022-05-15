@@ -6,8 +6,6 @@
 //
 
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.LinkedList;
 import java.util.Scanner;
 
@@ -109,7 +107,6 @@ public class Sistema {
                 System.out.println(paginasAlocadas[i] + " ");
             }
             System.out.println("");
-
             System.out.println("Registradores recebidos pelo setContext");
             for (int i = 0; i < reg.length; i++) {
                 System.out.print("r" + i);
@@ -576,7 +573,7 @@ public class Sistema {
                 case INT_STOP:
                     System.out.println("Ocorreu STOP no código, logo vamos remover o running");
                     //gp.removeFromProntos(gp.running);  // se usar essa linha o programa permanece na memória e dá rpa ver o resultado
-                    gp.finalizaProcesso(gp.running); // assim o programa sai da memória, mas o dump é limpo
+                    gp.desalocaProcesso(gp.running); // assim o programa sai da memória, mas o dump é limpo
 
                     // vê se ainda tem algum processo na lista e deixa esse como sendo o running
                     if (gp.prontos.size()>0){
@@ -652,6 +649,10 @@ public class Sistema {
             //quantidadeDePaginasUsadas = 0;
         }
 
+        public int getTamPagina(){
+            return tamPagina;
+        }
+
         private boolean[] initFrames() {
             boolean[] free = new boolean[nroFrames];
             for (int i = 0; i < nroFrames; i++) {
@@ -713,13 +714,12 @@ public class Sistema {
         }
 
 
-        // retorna null se não conseguir alocar, ou um array com os frames alocadas
+        // retorna -1 se não conseguir alocar, ou um array com os frames alocadas
         public int[] aloca(Word[] programa) {
             int quantidadePaginas = programa.length / tamPagina;
             if (programa.length % tamPagina > 0) quantidadePaginas++; // vê se ainda tem código além da divisão inteira
             framesAlocados = new int[quantidadePaginas];
             int indiceAlocado = 0;
-            int indicePrograma = 0;   //indice do programa
 
             // testa se tem espaço para alocar o programa
             int framesLivres =0;
@@ -734,26 +734,16 @@ public class Sistema {
                 return framesAlocados;
             }
 
+            // aloca os frames
             for (int i = 0; i < nroFrames; i++) {
                 if (quantidadePaginas == 0) break;
                 if (tabelaPaginas[i]) { //vê se o frame está vazio e aloca o programa ali
                     tabelaPaginas[i] = false; // marca o frame como ocupado
-
-                    for (int j = tamPagina * i; j < tamPagina * (i + 1); j++) {
-                        if (indicePrograma >= programa.length) break;
-                        mem[j].opc = programa[indicePrograma].opc;
-                        mem[j].r1 = programa[indicePrograma].r1;
-                        mem[j].r2 = programa[indicePrograma].r2;
-                        mem[j].p = programa[indicePrograma].p;
-                        indicePrograma++;
-                    }
                     framesAlocados[indiceAlocado] = i;
                     indiceAlocado++;
                     quantidadePaginas--;
                 }
-
             }
-
             return framesAlocados;
         }
 
@@ -776,13 +766,15 @@ public class Sistema {
             for(int i = 0; i < paginas.length; i ++) {
                 tabelaPaginas[paginas[i]] = true; // libera o frame
 
-                // reseta as posicoes da memória
+                /*
+                // reseta as posições da memória
                 for (int j = tamPagina * paginas[i]; j < tamPagina * (paginas[i] + 1); j++) {
                     mem[j].opc = Opcode.___;
                     mem[j].r1 = -1;
                     mem[j].r2 = -1;
                     mem[j].p = -1;
                 }
+                 */
             }
         }
 
@@ -795,6 +787,7 @@ public class Sistema {
         private int process_id;
         public PCB running;
         public int posicaoEscalonador;
+        public int tamPagina;
 
         public GerenciadorProcessos(GerenciadorMemoria gm, Word[] memory) {
             process_id=0;
@@ -802,6 +795,7 @@ public class Sistema {
             this.memory = memory;
             this.prontos = new LinkedList<>();
             this.posicaoEscalonador = 0;
+            this.tamPagina = gm.getTamPagina();
         }
 
         public LinkedList<PCB> getProntos() {
@@ -819,6 +813,7 @@ public class Sistema {
         public void setRunning(PCB processo){
             running = processo;
         }
+
 
         public int[] getPaginasAlocadas (int process_id){
             int [] paginasAlocadas = new int[1];
@@ -848,13 +843,27 @@ public class Sistema {
             return processo;
         }
 
+        // Se o processo não foi criado por falta de memória, retorna -1, caso contrário retorna o número do processo criado
         public int criaProcesso(Word [] programa){
-            System.out.println("Processo " + process_id + " criado");
             int[] paginasAlocadas = gm.aloca(programa);
 
-            // Se o processo não foi criado por falta de memória, retorna falso
+            // Se o processo não foi criado por falta de memória, retorna -1
             if (paginasAlocadas[0]==-1){
                 return -1;
+            }
+
+            System.out.println("Processo " + process_id + " criado");
+
+            int indicePrograma = 0;
+            for (int i=0; i<paginasAlocadas.length; i++) {
+                for (int j = tamPagina * paginasAlocadas[i]; j < tamPagina * (paginasAlocadas[i] + 1); j++) {
+                    if (indicePrograma >= programa.length) break;
+                    memory[j].opc = programa[indicePrograma].opc;
+                    memory[j].r1 = programa[indicePrograma].r1;
+                    memory[j].r2 = programa[indicePrograma].r2;
+                    memory[j].p = programa[indicePrograma].p;
+                    indicePrograma++;
+                }
             }
 
             PCB processo = new PCB(process_id, paginasAlocadas, vm.cpu.getPc(), vm.cpu.getReg(), vm.cpu.getIr(), vm.cpu.getInterrupts());
@@ -874,10 +883,26 @@ public class Sistema {
         }
 
 
-        public void finalizaProcesso(PCB processo){
+        public void desalocaProcesso(PCB processo){
+            int [] paginasAlocadas = processo.getPaginasAlocadas();
+
+            System.out.println("------ Estado da memória do programa desalocado---------");
+            for(int i = 0; i < paginasAlocadas.length; i ++) {
+                gm.dumpPagina(memory, paginasAlocadas[i]);
+            }
+
+            // reseta as posições da memória
+            for(int i = 0; i < paginasAlocadas.length; i ++) {
+                for (int j = tamPagina * paginasAlocadas[i]; j < tamPagina * (paginasAlocadas[i] + 1); j++) {
+                    memory[j].opc = Opcode.___;
+                    memory[j].r1 = -1;
+                    memory[j].r2 = -1;
+                    memory[j].p = -1;
+                }
+            }
             gm.desaloca(processo);
             prontos.remove(processo);
-            //System.out.println("Removido o processo " + processo.getId());
+            System.out.println("Removido o processo " + processo.getId());
         }
 
         public void removeFromProntos(PCB processo){
@@ -902,7 +927,6 @@ public class Sistema {
             /*
             System.out.println("Processo em execução e que será parado é id: " + running.getId() + " e seu Pc está em: " + running.getProgramCounter());
             System.out.println("Sua posição no escalonador é " + posicaoEscalonador);
-
             int [] paginasAlocadasDoProcessoAtual = running.getPaginasAlocadas();
             System.out.print("Suas páginas alocadas são " );
             for (int i=0; i<paginasAlocadasDoProcessoAtual.length; i++){
@@ -923,7 +947,6 @@ public class Sistema {
             /*
             System.out.println("Processo para iniciar execução é id: " + running.getId() + " e seu Pc está em: " + running.getProgramCounter());
             System.out.println("Sua posição no escalonador é " + posicaoEscalonador);
-
             paginasAlocadasDoProcessoAtual = running.getPaginasAlocadas();
             System.out.print("Suas páginas alocadas são " );
             for (int i=0; i<paginasAlocadasDoProcessoAtual.length; i++){
@@ -1028,7 +1051,7 @@ public class Sistema {
     public void roda(Word[] programa){
         //monitor.carga(programa, vm.m);
         if (gp.criaProcesso(programa)==-1){
-            System.out.println("Falta memoria para rodar o programa");
+            System.out.println("Falta memória para rodar o programa");
             return;
         }
 
@@ -1137,7 +1160,7 @@ public class Sistema {
     public void desaloca (int processId){
         PCB processo = gp.getProcesso(processId);
         int [] paginasAlocadas = gp.getPaginasAlocadas(processId);
-        gp.finalizaProcesso(processo);
+        gp.desalocaProcesso(processo);
         System.out.println("--------------Processo " + processId + " desalocado---------------");
         for (int i=0; i<paginasAlocadas.length; i++){
             gm.dumpPagina(vm.m, paginasAlocadas[i]);
@@ -1192,5 +1215,3 @@ public class Sistema {
     // -------------------  S I S T E M A - fim --------------------------------------------------------------
 
 }
-
-
