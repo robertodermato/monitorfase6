@@ -19,43 +19,45 @@ public class AppInterativo {
 
         BootAnimation ba = new BootAnimation();
         ba.load();
-        int entrada;
 
         Scanner in = new Scanner(System.in);
 
         while (true) {
+            System.out.println("");
+            System.out.println("---------------------------------------------");
 
-            try {
-                System.out.println("\nDigite um comando. Comandos disponíveis: cria nomeDePrograma\n" +
-                        "executa id\n" +
-                        "dump id\n" +
-                        "dumpM inicio fim \n" +
-                        "desaloca id\n" +
-                        "listaProcessos");
-                String palavra = in.nextLine();
-                entrada = Integer.parseInt(palavra.split(" ")[1]);
+            System.out.println("\nDigite um comando. Comandos disponíveis e exemplos de uso:\n\n" +
+                    "- cria nomeDePrograma - exemplo: cria(fibo)\n" +
+                    "- nomes de programas disponíveis: fibo, fato, bub\n" +
+                    "- executa id          - exemplo: executa(2)\n" +
+                    "- dump id             - exemplo: dump(1)\n" +
+                    "- dumpM inicio fim    - exemplo: dumpM(2,5)\n" +
+                    "- desaloca id         - exemplo: desaloca(1)\n" +
+                    "- listaProcessos      - exemplo: lista\n" +
+                    "- end                 - exemplo: end");
 
-                if (palavra.split(" ")[0].equals("s")) {
+            String palavra = in.nextLine();
 
-                    continue;
-                } else if(palavra.split(" ")[0].equals("c")) {
-
-                    continue;
-                }
-                //entrada = Integer.parseInt(in.nextLine());
-                if (entrada == -1)
-                    Runtime.getRuntime().exit(1); break;
-
-            } catch (NumberFormatException nfe) {
-                System.out.println("Apenas números!");
-                continue;
-            }
-            catch (ArrayIndexOutOfBoundsException e) {
-                System.out.println("Formato inválido.");
-                continue;
+            if (palavra.equals("lista")){
+                s.listaProcessos();
             }
 
+            else if (palavra.equals("end")){
+                System.out.println("Goodbye!");
+                break;
+            }
 
+            else if (palavra.contains("(")){
+                //s.cria(Sistema.progs.bubbleSort);
+                //s.executa(2);
+                //s.dump(2);
+                //s.dumpM(2,5);
+                //s.desaloca(2);
+            }
+
+            else{
+                System.out.println("Comando desconhecido!");
+            }
         }
     }
 }
