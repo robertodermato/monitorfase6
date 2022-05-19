@@ -27,12 +27,12 @@ public class AppInterativo {
             System.out.println("---------------------------------------------");
 
             System.out.println("\nDigite um comando. Comandos disponíveis e exemplos de uso:\n\n" +
-                    "- cria nomeDePrograma - exemplo: cria(fibo)\n" +
+                    "- cria nomeDePrograma - exemplo: cria fibo\n" +
                     "- nomes de programas disponíveis: fibo, fato, bub\n" +
-                    "- executa id          - exemplo: executa(2)\n" +
-                    "- dump id             - exemplo: dump(1)\n" +
-                    "- dumpM inicio fim    - exemplo: dumpM(2,5)\n" +
-                    "- desaloca id         - exemplo: desaloca(1)\n" +
+                    "- executa id          - exemplo: exe 2\n" +
+                    "- dump id             - exemplo: dump 1\n" +
+                    "- dumpM inicio fim    - exemplo: dumpM 2,5\n" +
+                    "- desaloca id         - exemplo: des 1\n" +
                     "- listaProcessos      - exemplo: lista\n" +
                     "- end                 - exemplo: end");
 
@@ -47,12 +47,55 @@ public class AppInterativo {
                 break;
             }
 
-            else if (palavra.contains("(")){
-                //s.cria(Sistema.progs.bubbleSort);
+            else if (palavra.contains(" ")){
+                String [] input = palavra.split(" ");
+                String comando = input[0];
+                String arg = input[1];
+
+                if (comando.equals("cria")){
+                    if (arg.equals("fibo")){
+                        s.cria(Sistema.progs.fibonacci10);
+                    }
+                    else if (arg.equals("fato")){
+                        s.cria(Sistema.progs.fatorial);
+                    }
+                    else if (arg.equals("bub")){
+                        s.cria(Sistema.progs.bubbleSort);
+                    }
+                    else{
+                        System.out.println("Programa desconhecido");
+                    }
+                }
+
                 //s.executa(2);
+                else if (comando.equals("exe")){
+                    int processo = Integer.parseInt(arg);
+                    s.executa(processo);
+                }
+
                 //s.dump(2);
-                //s.dumpM(2,5);
+                else if (comando.equals("dump")){
+                    int processo = Integer.parseInt(arg);
+                    s.dump(processo);
+                }
+
                 //s.desaloca(2);
+                else if (comando.equals("des")){
+                    int processo = Integer.parseInt(arg);
+                    s.desaloca(processo);
+                }
+
+                //s.dumpM(2,5);
+                else if (comando.equals("dumpM")){
+                    String [] numeros = arg.split(",");
+                    int inicio = Integer.parseInt(numeros[0]);
+                    int fim = Integer.parseInt(numeros[1]);
+                    s.dumpM(inicio,fim);
+                }
+
+                else{
+                    System.out.println("Comando desconhecido!");
+                }
             }
 
             else{
