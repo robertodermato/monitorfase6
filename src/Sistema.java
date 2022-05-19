@@ -920,6 +920,15 @@ public class Sistema {
             vm.cpu.setContext(programCounterDoRunning, paginasAlocadasDoRunning, registradoresdoRunning, instructionRegisterDoRunning, interruptsDoRunning);
         }
 
+        public void listaProcessos(){
+            System.out.println("-------------Processo em execução:");
+            System.out.println(running);
+            System.out.println("-------------Processos na lista de prontos");
+            for (PCB processo : prontos){
+                System.out.println(processo);
+            }
+        }
+
         public void runEscalonador(int programCounter, int [] registradores, Word instructionRegister, Interrupts interrupt, int[] paginasAlocadas){
             running = prontos.get(posicaoEscalonador);
 
@@ -1008,6 +1017,17 @@ public class Sistema {
             this.registradores =registradores;
             this.instructionRegister = instructionRegister;
             this.interrupt = interrupt;
+        }
+
+        public String toString(){
+            String paginasAlocadasString = "[";
+            for (int i=0; i<paginasAlocadas.length; i++){
+                paginasAlocadasString = paginasAlocadasString + " " + paginasAlocadas[i];
+            }
+            paginasAlocadasString = paginasAlocadasString + "]";
+
+            String processo = "Process id: " + id + ", Program counter: " + programCounter + ", Páginas alocadas: " + paginasAlocadasString;
+            return processo;
         }
 
     }
@@ -1117,6 +1137,10 @@ public class Sistema {
         vm.cpu.run();                  //                         e cpu executa
         System.out.println("---------------------------------- programa executado ");
         gm.dumpMemoriaUsada(vm.m);
+    }
+
+    public void listaProcessos(){
+        gp.listaProcessos();
     }
 
     public void executaComEscalonador() {

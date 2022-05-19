@@ -65,6 +65,7 @@ public class App {
         //s.cria(Sistema.progs.fatorial);
         //s.cria(Sistema.progs.bubbleSort);
         s.executa(2);
+        s.listaProcessos();
         s.dump(2);
         //s.dumpM(2,5);
         s.desaloca(2);
