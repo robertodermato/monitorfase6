@@ -783,9 +783,12 @@ public class Sistema {
     public class GerenciadorProcessos {
         private GerenciadorMemoria gm;
         private Word[] memory;
+
         private LinkedList<PCB> prontos;
-        private int process_id;
+        private LinkedList<PCB> bloqueados;
         public PCB running;
+
+        private int process_id;
         public int posicaoEscalonador;
         public int tamPagina;
 
@@ -793,7 +796,10 @@ public class Sistema {
             process_id=0;
             this.gm = gm;
             this.memory = memory;
+
             this.prontos = new LinkedList<>();
+            this.bloqueados = new LinkedList<>();
+
             this.posicaoEscalonador = 0;
             this.tamPagina = gm.getTamPagina();
         }
@@ -922,10 +928,23 @@ public class Sistema {
 
         public void listaProcessos(){
             System.out.println("-------------Processo em execução:");
-            System.out.println(running);
+            if (this.running==null) System.out.println("Nenhum");
+            else System.out.println(this.running);
+
             System.out.println("-------------Processos na lista de prontos");
-            for (PCB processo : prontos){
-                System.out.println(processo);
+            if (this.prontos.size()==0) System.out.println("Nenhum");
+            else {
+                for (PCB processo : this.prontos) {
+                    System.out.println(processo);
+                }
+            }
+
+            System.out.println("-------------Processos na lista de bloqueados");
+            if (this.bloqueados.size()==0) System.out.println("Nenhum");
+            else {
+                for (PCB processo : this.bloqueados) {
+                    System.out.println(processo);
+                }
             }
         }
 
