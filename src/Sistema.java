@@ -552,16 +552,14 @@ public class Sistema {
             // nao ha protecoes...  o que poderia acontecer ?
         }
 
-        // deveria ter esse método para manejo correto do input, mas falta arrumar o paginas alocadas
-        /*
         public int traduzEndereco (int endereco){
+            int [] paginasAlocadas = gm.getFramesAlocados();
             try {
                 return (paginasAlocadas[(endereco / 16)] * 16) + (endereco % 16);
             } catch(ArrayIndexOutOfBoundsException e) {
                 return -1;
             }
         }
-         */
 
         public boolean interruptHandler(int[] registers, Word[] memory, int programCounter, Interrupts interrupts) {
             switch (interrupts) {
@@ -612,7 +610,7 @@ public class Sistema {
                     Scanner in = new Scanner(System.in);
 
                     if (registers[8] == 1) {
-                        int address_destiny = registers[9];
+                        int address_destiny = traduzEndereco(registers[9]);
                         System.out.println("Insira um número:");
                         int value_to_be_written = in.nextInt();
                         memory[address_destiny].p = value_to_be_written;
@@ -620,7 +618,7 @@ public class Sistema {
                     }
 
                     if (registers[8] == 2) {
-                        int source_adress = registers[9];
+                        int source_adress = traduzEndereco(registers[9]);
                         System.out.println("Output: " + memory[source_adress].p);
                         return true;
                     }

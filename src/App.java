@@ -59,16 +59,17 @@ public class App {
         s.cria(Sistema.progs.bubbleSort);
         s.cria(Sistema.progs.bubbleSort);
         s.cria(Sistema.progs.bubbleSort);
+        s.cria(Sistema.progs.fatorialComInput);
         //s.cria(Sistema.progs.fatorial);
         //s.cria(Sistema.progs.fatorial);
         //s.cria(Sistema.progs.fatorial);
         //s.cria(Sistema.progs.fatorial);
         //s.cria(Sistema.progs.bubbleSort);
-        s.executa(2);
-        s.listaProcessos();
-        s.dump(2);
+        s.executa(3);
+        //s.listaProcessos();
+        //s.dump(2);
         //s.dumpM(2,5);
-        s.desaloca(2);
+        //s.desaloca(2);
 
         //---------------------------------------------------------------------------------------
         // Fase 6 - Escalonador
