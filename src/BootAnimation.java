@@ -10,6 +10,7 @@ public class BootAnimation {
                 "|    |  /\\___ \\\\    \\_\\  \\  |  /|  | \\/  |\n" +
                 "|______//____  >\\______  /____/ |__|  |__|\n" +
                 "             \\/        \\/                 ";
+
     }
 
     public void load() throws InterruptedException {

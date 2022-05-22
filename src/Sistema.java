@@ -562,10 +562,12 @@ public class Sistema {
         }
 
         public boolean interruptHandler(int[] registers, Word[] memory, int programCounter, Interrupts interrupts) {
+            gp.bloqueados.add(gp.running);
             switch (interrupts) {
                 case INT_SCHEDULER:
                     System.out.println("Escalonador acionado");
                     gp.runEscalonador(programCounter, registers, instructionRegister, interrupts, gp.running.getPaginasAlocadas());
+                    gp.bloqueados.remove(gp.running);
                     return true;
 
                 case INT_STOP:
@@ -578,27 +580,32 @@ public class Sistema {
                         if (gp.posicaoEscalonador>0) gp.posicaoEscalonador = gp.posicaoEscalonador - 1;
                         gp.running = gp.prontos.get(gp.posicaoEscalonador);
                         gp.setCPUforRunningProcess();
+                        gp.bloqueados.remove(gp.running);
                         return true;
                     }
                     else{
+                        gp.bloqueados.remove(gp.running);
                         return false;
                     }
 
                 case INT_INVALID_ADDRESS:
                     System.out.println("Endereço inválido, na linha: " + programCounter);
                     dump(memory[programCounter]);
+                    gp.bloqueados.remove(gp.running);
                     return false;
 
                 // Consideramos, além de uma instrução inválida, o uso de um registrador inválido também
                 case INT_INVALID_INSTRUCTION:
                     System.out.println("Comando desconhecido ou registrador inválido, na linha: " + programCounter);
                     dump(memory[programCounter]);
+                    gp.bloqueados.remove(gp.running);
                     return false;
 
                 case INT_OVERFLOW:
                     programCounter--;
                     System.out.println("Deu overflow, na linha: " + programCounter);
                     dump(memory[programCounter]);
+                    gp.bloqueados.remove(gp.running);
                     return false;
 
                 case INT_SYSTEM_CALL:
@@ -614,15 +621,18 @@ public class Sistema {
                         System.out.println("Insira um número:");
                         int value_to_be_written = in.nextInt();
                         memory[address_destiny].p = value_to_be_written;
+                        gp.bloqueados.remove(gp.running);
                         return true;
                     }
 
                     if (registers[8] == 2) {
                         int source_adress = traduzEndereco(registers[9]);
                         System.out.println("Output: " + memory[source_adress].p);
+                        gp.bloqueados.remove(gp.running);
                         return true;
                     }
             }
+            gp.bloqueados.remove(gp.running);
             return true;
         }
     }
