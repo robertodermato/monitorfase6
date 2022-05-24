@@ -1097,7 +1097,11 @@ public class Sistema {
 
     public void roda(Word[] programa){
         //monitor.carga(programa, vm.m);
-        if (gp.criaProcesso(programa)==-1){
+        int processoCriado;
+        processoCriado = gp.criaProcesso(programa);
+        int [] paginasAlocadas = gp.getPaginasAlocadas(processoCriado);
+
+        if (processoCriado==-1){
             System.out.println("Falta memória para rodar o programa");
             return;
         }
@@ -1111,7 +1115,10 @@ public class Sistema {
         System.out.println("---------------------------------- após execucao ");
 
         //monitor.dump(vm.m, 0, programa.length);
-        gm.dumpMemoriaUsada(vm.m);
+        for (int i=0; i<paginasAlocadas.length; i++){
+            gm.dumpPagina(vm.m, paginasAlocadas[i]);
+        }
+
 
     }
 
@@ -1163,7 +1170,9 @@ public class Sistema {
         //vm.cpu.setContext(0, paginasAlocadas, registradores, instructionRegister, interrupt);          // monitor seta contexto - pc aponta para inicio do programa
         vm.cpu.run();                  //                         e cpu executa
         System.out.println("---------------------------------- programa executado ");
-        gm.dumpMemoriaUsada(vm.m);
+        for (int i=0; i<paginasAlocadas.length; i++){
+            gm.dumpPagina(vm.m, paginasAlocadas[i]);
+        }
     }
 
     public void listaProcessos(){

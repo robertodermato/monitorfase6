@@ -35,7 +35,7 @@ public class App {
         //s.roda(Sistema.progs.bubbleSort);
         //s.roda(Sistema.progs.fatorial);
         //s.roda(Sistema.progs.fatorial);
-        //s.roda(Sistema.progs.fatorial);
+        s.roda(Sistema.progs.fatorial);
         //s.roda(Sistema.progs.fatorial);
         //s.roda(Sistema.progs.fibonacci10);
         //s.roda(Sistema.progs.fibonacci10);
@@ -56,16 +56,16 @@ public class App {
 
         //--------------------------------------------------------------------------------
         // Fase 5 - Gerenciador de Processos
-        s.cria(Sistema.progs.bubbleSort);
-        s.cria(Sistema.progs.bubbleSort);
-        s.cria(Sistema.progs.bubbleSort);
-        s.cria(Sistema.progs.fatorialComInput);
+        //s.cria(Sistema.progs.bubbleSort);
+        //s.cria(Sistema.progs.bubbleSort);
+        //s.cria(Sistema.progs.bubbleSort);
+        //s.cria(Sistema.progs.fatorialComInput);
         //s.cria(Sistema.progs.fatorial);
         //s.cria(Sistema.progs.fatorial);
         //s.cria(Sistema.progs.fatorial);
         //s.cria(Sistema.progs.fatorial);
         //s.cria(Sistema.progs.bubbleSort);
-        s.executa(3);
+        //s.executa(3);
         //s.listaProcessos();
         //s.dump(2);
         //s.dumpM(2,5);
