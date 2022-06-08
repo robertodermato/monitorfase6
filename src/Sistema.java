@@ -853,7 +853,8 @@ public class Sistema {
             }
 
             // referências problemáticas aqui??? vm.cpu...
-            PCB processo = new PCB(process_id, paginasAlocadas, vm.cpu.getPc(), vm.cpu.getReg(), vm.cpu.getIr(), vm.cpu.getInterrupts());
+            PCB processo = new PCB(process_id, paginasAlocadas, 0, new int[10], new Word(Opcode.___,-1,-1,-1), Interrupts.INT_NONE);
+            //PCB processo = new PCB(process_id, paginasAlocadas, vm.cpu.getPc(), vm.cpu.getReg(), vm.cpu.getIr(), vm.cpu.getInterrupts());
             prontos.add(processo);
 
             process_id++;
