@@ -34,12 +34,18 @@ public class AppInterativo {
                     "- dumpM inicio fim    - exemplo: dumpM 2,5\n" +
                     "- desaloca id         - exemplo: des 1\n" +
                     "- listaProcessos      - exemplo: lista\n" +
+                    "- executa escalonador - exemplo: esca\n" +
                     "- end                 - exemplo: end");
 
             String palavra = in.nextLine();
 
             if (palavra.equals("lista")){
                 s.listaProcessos();
+            }
+
+            //s.executaComEscalonador();
+            else if (palavra.equals("esca")){
+                s.executaComEscalonador();
             }
 
             else if (palavra.equals("end")){
