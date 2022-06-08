@@ -35,7 +35,7 @@ public class App {
         //s.roda(Sistema.progs.bubbleSort);
         //s.roda(Sistema.progs.fatorial);
         //s.roda(Sistema.progs.fatorial);
-        s.roda(Sistema.progs.fatorial);
+        //s.roda(Sistema.progs.fatorial);
         //s.roda(Sistema.progs.fatorial);
         //s.roda(Sistema.progs.fibonacci10);
         //s.roda(Sistema.progs.fibonacci10);
@@ -76,12 +76,12 @@ public class App {
         //s.cria(Sistema.progs.bubbleSort);
         //s.cria(Sistema.progs.bubbleSort);
         //s.cria(Sistema.progs.bubbleSort);
+        s.cria(Sistema.progs.fatorial);
+        s.cria(Sistema.progs.fatorial);
+        s.cria(Sistema.progs.fatorial);
         //s.cria(Sistema.progs.fatorial);
-        //s.cria(Sistema.progs.fatorial);
-        //s.cria(Sistema.progs.fatorial);
-        //s.cria(Sistema.progs.fatorial);
-        //s.cria(Sistema.progs.bubbleSort);
+        s.cria(Sistema.progs.bubbleSort);
 
-        //s.executaComEscalonador();
+        s.executaComEscalonador();
     }
 }

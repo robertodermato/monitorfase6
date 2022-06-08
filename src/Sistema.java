@@ -62,7 +62,6 @@ public class Sistema {
         private int[] reg;        // registradores da CPU
         public int maxInt;          // criado para podermos simular overflow
         private int[] paginasAlocadas;
-        private int[] tabelaDePaginas;
         private int tamPaginaMemoria;
 
         // usado pelo escalonador
@@ -91,9 +90,7 @@ public class Sistema {
 
         public void setContext(int _pc, int [] paginasAlocadas, int [] registradores, Word instructionRegister, Interrupts interrupt) {  // no futuro esta funcao vai ter que ser
             pc = _pc;                                   // limite e pc (deve ser zero nesta versão)
-            this.interrupts = Interrupts.INT_NONE;      // inicializa interrupção com NONE
             this.paginasAlocadas = paginasAlocadas;
-            this.tabelaDePaginas = tabelaDePaginas;
             this.reg = registradores;
             ir = instructionRegister;
             this.interrupts = interrupt;
@@ -208,15 +205,11 @@ public class Sistema {
             }
         }
 
-        public void run() {        // execucao da CPU supoe que o contexto da CPU, vide acima, esta devidamente setado
+        public void run() {
 
             boolean run = true;
-            while (run) {            // ciclo de instrucoes. acaba cfe instrucao, veja cada caso.
+            while (run) {
                 // FETCH
-
-                //if (isAddressValid(traduzEndereco(pc))) {
-                //    ir = m[traduzEndereco(pc)];
-                //}
 
                 //System.out.println("rodando a cpu");
 
@@ -467,10 +460,6 @@ public class Sistema {
                     run = monitor.interruptHandler(reg, m, pc, interrupts);
                     interrupts = Interrupts.INT_NONE; // sai da chamada de sistema. talvez seja preciso criar um handler pra system call
                 }
-
-
-
-
             }
         }
     }
@@ -494,10 +483,9 @@ public class Sistema {
             for (int i = 0; i < tamMem; i++) {
                 m[i] = new Word(Opcode.___, -1, -1, -1);
             }
-            ;
 
             // cpu
-            cpu = new CPU(m, tamanhoPaginaMemoria, maxInt, deltaMax, registradores, interrupt, instructionRegister);   // cpu acessa memória
+            cpu = new CPU(m, tamanhoPaginaMemoria, maxInt, deltaMax, registradores, interrupt, instructionRegister);
         }
 
         public int getTamMem() {
@@ -536,7 +524,8 @@ public class Sistema {
             }
         }
 
-        public void carga(Word[] p, Word[] m) {    // significa ler "p" de memoria secundaria e colocar na principal "m"
+        // significa ler "p" de memoria secundaria e colocar na principal "m"
+        public void carga(Word[] p, Word[] m) {
             for (int i = 0; i < p.length; i++) {
                 m[i].opc = p[i].opc;
                 m[i].r1 = p[i].r1;
@@ -546,10 +535,9 @@ public class Sistema {
         }
 
         public void executa() {
-            vm.cpu.setContext(0, gm.getFramesAlocados(), vm.cpu.getReg(), vm.cpu.getIr(), vm.cpu.getInterrupts());          // monitor seta contexto - pc aponta para inicio do programa
-            vm.cpu.run();                  //                         e cpu executa
-            // note aqui que o monitor espera que o programa carregado acabe normalmente
-            // nao ha protecoes...  o que poderia acontecer ?
+            // monitor seta contexto - pc aponta para inicio do programa
+            vm.cpu.setContext(0, gm.getFramesAlocados(), vm.cpu.getReg(), vm.cpu.getIr(), vm.cpu.getInterrupts());
+            vm.cpu.run();
         }
 
         public int traduzEndereco (int endereco){
@@ -562,12 +550,10 @@ public class Sistema {
         }
 
         public boolean interruptHandler(int[] registers, Word[] memory, int programCounter, Interrupts interrupts) {
-            gp.bloqueados.add(gp.running);
             switch (interrupts) {
                 case INT_SCHEDULER:
                     System.out.println("Escalonador acionado");
                     gp.runEscalonador(programCounter, registers, instructionRegister, interrupts, gp.running.getPaginasAlocadas());
-                    gp.bloqueados.remove(gp.running);
                     return true;
 
                 case INT_STOP:
@@ -580,32 +566,27 @@ public class Sistema {
                         if (gp.posicaoEscalonador>0) gp.posicaoEscalonador = gp.posicaoEscalonador - 1;
                         gp.running = gp.prontos.get(gp.posicaoEscalonador);
                         gp.setCPUforRunningProcess();
-                        gp.bloqueados.remove(gp.running);
                         return true;
                     }
                     else{
-                        gp.bloqueados.remove(gp.running);
                         return false;
                     }
 
                 case INT_INVALID_ADDRESS:
                     System.out.println("Endereço inválido, na linha: " + programCounter);
                     dump(memory[programCounter]);
-                    gp.bloqueados.remove(gp.running);
                     return false;
 
                 // Consideramos, além de uma instrução inválida, o uso de um registrador inválido também
                 case INT_INVALID_INSTRUCTION:
                     System.out.println("Comando desconhecido ou registrador inválido, na linha: " + programCounter);
                     dump(memory[programCounter]);
-                    gp.bloqueados.remove(gp.running);
                     return false;
 
                 case INT_OVERFLOW:
                     programCounter--;
                     System.out.println("Deu overflow, na linha: " + programCounter);
                     dump(memory[programCounter]);
-                    gp.bloqueados.remove(gp.running);
                     return false;
 
                 case INT_SYSTEM_CALL:
@@ -621,18 +602,15 @@ public class Sistema {
                         System.out.println("Insira um número:");
                         int value_to_be_written = in.nextInt();
                         memory[address_destiny].p = value_to_be_written;
-                        gp.bloqueados.remove(gp.running);
                         return true;
                     }
 
                     if (registers[8] == 2) {
                         int source_adress = traduzEndereco(registers[9]);
                         System.out.println("Output: " + memory[source_adress].p);
-                        gp.bloqueados.remove(gp.running);
                         return true;
                     }
             }
-            gp.bloqueados.remove(gp.running);
             return true;
         }
     }
@@ -766,26 +744,18 @@ public class Sistema {
         public void desaloca(PCB processo){
             int[] paginas = processo.getPaginasAlocadas();
 
-            System.out.println("------ Estado da memória do programa desalocado---------");
+            System.out.println(" ");
+            System.out.println("------ Estado da memória onde estava o programa que foi desalocado ---------");
+            System.out.println("------ Só para mostrar que memória ficou limpa --------");
             for(int i = 0; i < paginas.length; i ++) {
                 dumpPagina(mem, paginas[i]);
             }
 
+            // libera os frames
             for(int i = 0; i < paginas.length; i ++) {
-                tabelaPaginas[paginas[i]] = true; // libera o frame
-
-                /*
-                // reseta as posições da memória
-                for (int j = tamPagina * paginas[i]; j < tamPagina * (paginas[i] + 1); j++) {
-                    mem[j].opc = Opcode.___;
-                    mem[j].r1 = -1;
-                    mem[j].r2 = -1;
-                    mem[j].p = -1;
-                }
-                 */
+                tabelaPaginas[paginas[i]] = true;
             }
         }
-
     }
 
     public class GerenciadorProcessos {
@@ -829,6 +799,7 @@ public class Sistema {
         }
 
 
+        // retorna -1 se não achar o processo ou um array com as páginas alocadas do processo
         public int[] getPaginasAlocadas (int process_id){
             int [] paginasAlocadas = new int[1];
             boolean achou = false;
@@ -866,7 +837,8 @@ public class Sistema {
                 return -1;
             }
 
-            System.out.println("Processo " + process_id + " criado");
+            System.out.println(" ");
+            System.out.println("------ Processo " + process_id + " criado -------------");
 
             int indicePrograma = 0;
             for (int i=0; i<paginasAlocadas.length; i++) {
@@ -880,6 +852,7 @@ public class Sistema {
                 }
             }
 
+            // referências problemáticas aqui??? vm.cpu...
             PCB processo = new PCB(process_id, paginasAlocadas, vm.cpu.getPc(), vm.cpu.getReg(), vm.cpu.getIr(), vm.cpu.getInterrupts());
             prontos.add(processo);
 
@@ -900,7 +873,9 @@ public class Sistema {
         public void desalocaProcesso(PCB processo){
             int [] paginasAlocadas = processo.getPaginasAlocadas();
 
-            System.out.println("------ Estado da memória do programa desalocado---------");
+            System.out.println(" ");
+            System.out.println("------ Estado da memória do programa que será desalocado ---------");
+            System.out.println("------ Para poder observar o resultado da execução ---------------");
             for(int i = 0; i < paginasAlocadas.length; i ++) {
                 gm.dumpPagina(memory, paginasAlocadas[i]);
             }
@@ -916,11 +891,8 @@ public class Sistema {
             }
             gm.desaloca(processo);
             prontos.remove(processo);
-            System.out.println("Removido o processo " + processo.getId());
-        }
-
-        public void removeFromProntos(PCB processo){
-            prontos.remove(processo);
+            System.out.println(" ");
+            System.out.println("-------------- Removido o processo " + processo.getId());
         }
 
         public void setCPUforRunningProcess(){
@@ -1012,7 +984,6 @@ public class Sistema {
             this.registradores = new int[reg.length];
             this.instructionRegister = ir;
             this.interrupt = interrupt;
-
         }
 
         public int[] getPaginasAlocadas(){
@@ -1180,6 +1151,7 @@ public class Sistema {
     }
 
     public void executaComEscalonador() {
+        System.out.println(" ");
         System.out.println("Iniciando execução dos processos prontos com escalonador");
         vm.cpu.setEscalonadorState(true);
         prontos = gp.getProntos();
@@ -1197,7 +1169,7 @@ public class Sistema {
 
         vm.cpu.run();
         System.out.println("---------------------------------- Escalonador executado ");
-        gm.dumpMemoriaUsada(vm.m);
+        //gm.dumpMemoriaUsada(vm.m);
     }
 
     public void dump (int processId){
